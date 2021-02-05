@@ -3,14 +3,18 @@ package ru.slatinin.backgroundlocationtracker;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.ServiceConnection;
 import android.os.Build;
-import android.os.IBinder;
+
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
+import java.util.concurrent.TimeUnit;
 
 public class App extends Application {
 
+    public static final String TAG = "MyWorker";
 
     @Override
     public void onCreate() {
@@ -21,6 +25,9 @@ public class App extends Application {
                     "LocationTrackerChannel", NotificationManager.IMPORTANCE_DEFAULT);
             ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
         }
-        JobSchedulerUtil.scheduleUpdateJob(this);
+        PeriodicWorkRequest periodicWork = new PeriodicWorkRequest.Builder(MyWorker.class, 15, TimeUnit.MINUTES)
+                .addTag(TAG)
+                .build();
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("Location", ExistingPeriodicWorkPolicy.REPLACE, periodicWork);
     }
 }
